@@ -14,6 +14,9 @@ BUNDLE_OUTPUT ?= $(CURDIR)/.bundle
 export BUNDLE_REMOTE ?= http://k3d-test:59918
 
 BUNDLE := $(BIN_DIR)/bundle
+CONFIGURE := $(BIN_DIR)/configure
+
+RENDER2_OUTPUT ?= $(CURDIR)/.render2
 
 BUNDLE_SOURCES := bundle.yaml
 
@@ -24,12 +27,15 @@ help: ## Show help for common make targets.
 ##@ Dependencies
 
 .PHONY: deps
-deps: $(BUNDLE) ## Install local build/push tooling into .bin - bundle is sourced from ../bundle
+deps: $(BUNDLE) $(CONFIGURE) ## Install local build/push tooling into .bin - bundle is sourced from ../bundle
 
 BUNDLE_BINARY_SOURCES := $(shell find $(BUNDLE_BINARY_SRC) -type f -name '*.go') $(BUNDLE_BINARY_SRC)/go.mod $(BUNDLE_BINARY_SRC)/go.sum
 
 $(BUNDLE): $(BUNDLE_BINARY_SOURCES) | $(BIN_DIR)
 	cd $(BUNDLE_BINARY_SRC) && go build -o $(BUNDLE) ./cmd/bundle
+
+$(CONFIGURE): $(BUNDLE_BINARY_SOURCES) | $(BIN_DIR)
+	cd $(BUNDLE_BINARY_SRC) && go build -o $(CONFIGURE) ./cmd/configure
 
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
@@ -55,6 +61,19 @@ lock.json: push
 .PHONY: lock
 lock: lock.json # Push the bundle, then generate lock.json
 
+##@ Configure
+
+# render2 downloads this bundle's and every imported bundle's capabilities
+# (resolved transitively via lock.json) into their own subdirectory here.
+$(RENDER2_OUTPUT): lock.json
+	rm -rf $(RENDER2_OUTPUT)
+	$(BUNDLE) render2 --module capabilities=recv lock.json --output $(RENDER2_OUTPUT)
+	@touch $(RENDER2_OUTPUT)
+
+.PHONY: configure
+configure: $(CONFIGURE) $(RENDER2_OUTPUT) ## Apply base then gatsby to an agent.yaml (stdin) using configure
+	echo "" | $(CONFIGURE) $(RENDER2_OUTPUT) --apply base --apply gatsby
+
 .PHONY: clean
 clean: ## Ensure all build artifacts and deps are removed
-	rm -rf $(BUNDLE_OUTPUT) lock.json
+	rm -rf $(BUNDLE_OUTPUT) $(RENDER2_OUTPUT) lock.json
