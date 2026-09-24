@@ -1,3 +1,7 @@
 import:
   ddl-r-abdulaziz/root:
     branch: main
+
+capabilities:
+- name: gatsby
+  path: capabilities/gatsby
