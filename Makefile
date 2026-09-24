@@ -71,7 +71,7 @@ $(RENDER2_OUTPUT): lock.json
 	@touch $(RENDER2_OUTPUT)
 
 .PHONY: configure
-configure: $(CONFIGURE) $(RENDER2_OUTPUT) bundle ## Apply base then gatsby to an agent.yaml (stdin) using configure
+configure: $(RENDER2_OUTPUT) ## Apply base then gatsby to an agent.yaml (stdin) using configure
 	echo "" | $(CONFIGURE) $(RENDER2_OUTPUT) --apply base --apply gatsby
 
 .PHONY: clean
