@@ -5,8 +5,8 @@ SHELL := bash
 
 BIN_DIR ?= $(CURDIR)/.bin
 
-# until there's a way to add a version check, install from a known checkout
-BUNDLE_BINARY_SRC ?= ../bundle
+# assumes this repo is nested under cap-demo, a sibling of the bundle tool checkout
+BUNDLE_BINARY_SRC ?= ../../bundle
 
 BUNDLE_OUTPUT ?= $(CURDIR)/.bundle
 
