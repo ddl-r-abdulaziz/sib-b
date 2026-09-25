@@ -16,8 +16,6 @@ export BUNDLE_REMOTE ?= http://k3d-test:59918
 BUNDLE := $(BIN_DIR)/bundle
 CONFIGURE := $(BIN_DIR)/configure
 
-RENDER2_OUTPUT ?= $(CURDIR)/.render2
-
 BUNDLE_SOURCES := bundle.yaml
 
 .PHONY: help
@@ -63,17 +61,10 @@ lock: lock.json # Push the bundle, then generate lock.json
 
 ##@ Configure
 
-# render2 downloads this bundle's and every imported bundle's capabilities
-# (resolved transitively via lock.json) into their own subdirectory here.
-$(RENDER2_OUTPUT): lock.json
-	rm -rf $(RENDER2_OUTPUT)
-	$(BUNDLE) render2 --module capabilities=recv lock.json --output $(RENDER2_OUTPUT)
-	@touch $(RENDER2_OUTPUT)
-
 .PHONY: configure
-configure: $(RENDER2_OUTPUT) ## Apply base then gatsby to an agent.yaml (stdin) using configure
-	echo "" | $(CONFIGURE) $(RENDER2_OUTPUT) --apply base --apply gatsby
+configure: lock.json ## Apply base then gatsby to an agent.yaml (stdin) using configure
+	$(CONFIGURE) lock.json --apply base --apply gatsby
 
 .PHONY: clean
 clean: ## Ensure all build artifacts and deps are removed
-	rm -rf $(BUNDLE_OUTPUT) $(RENDER2_OUTPUT) lock.json
+	rm -rf $(BUNDLE_OUTPUT) lock.json
