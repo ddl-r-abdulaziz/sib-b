@@ -14,7 +14,6 @@ BUNDLE_OUTPUT ?= $(CURDIR)/.bundle
 export BUNDLE_REMOTE ?= http://k3d-test:59918
 
 BUNDLE := $(BIN_DIR)/bundle
-CONFIGURE := $(BIN_DIR)/configure
 
 BUNDLE_SOURCES := bundle.yaml
 
@@ -25,15 +24,12 @@ help: ## Show help for common make targets.
 ##@ Dependencies
 
 .PHONY: deps
-deps: $(BUNDLE) $(CONFIGURE) ## Install local build/push tooling into .bin - bundle is sourced from ../bundle
+deps: $(BUNDLE) ## Install local build/push tooling into .bin - bundle is sourced from ../bundle
 
 BUNDLE_BINARY_SOURCES := $(shell find $(BUNDLE_BINARY_SRC) -type f -name '*.go') $(BUNDLE_BINARY_SRC)/go.mod $(BUNDLE_BINARY_SRC)/go.sum
 
 $(BUNDLE): $(BUNDLE_BINARY_SOURCES) | $(BIN_DIR)
 	cd $(BUNDLE_BINARY_SRC) && go build -o $(BUNDLE) ./cmd/bundle
-
-$(CONFIGURE): $(BUNDLE_BINARY_SOURCES) | $(BIN_DIR)
-	cd $(BUNDLE_BINARY_SRC) && go build -o $(CONFIGURE) ./cmd/configure
 
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
@@ -62,7 +58,7 @@ lock: lock.json # Push the bundle, then generate lock.json
 ##@ Configure
 
 config.yaml: lock.json
-	$(CONFIGURE) lock.json --apply base --apply gatsby > config.yaml
+	$(BUNDLE) configure lock.json --apply base --apply gatsby > config.yaml
 
 .PHONY: configure
 configure: config.yaml ## Apply base then gatsby to an agent.yaml (stdin) using configure
